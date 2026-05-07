@@ -199,10 +199,10 @@ class TimeZoneFilterTest {
 
         filter.doFilter(request, response, filterChain);
 
-        // Malformed offset "abc" produces GMT (TimeZone.getTimeZone fallback for invalid offsets)
+        // Malformed offset "abc" should fall back to default timezone
         TimeZone tz = getCapturedTimezone();
         assertNotNull(tz);
-        assertEquals("GMT", tz.getID());
+        assertEquals("Asia/Shanghai", tz.getID());
     }
 
     private static class MockFilterChain implements FilterChain {

@@ -117,6 +117,11 @@ public class TimeZoneFilter implements Filter {
         String value = offset.startsWith("+") || offset.startsWith("-")
             ? offset.substring(1) : offset;
 
+        // Validate: must contain only digits and optional colon
+        if (!value.matches("[0-9:]+")) {
+            return null; // Invalid format, will fall back to default timezone
+        }
+
         // Split by : if present
         String[] parts = value.split(":");
 
