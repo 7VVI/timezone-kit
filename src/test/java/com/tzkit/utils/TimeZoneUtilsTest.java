@@ -66,9 +66,107 @@ class TimeZoneUtilsTest {
     }
 
     @Test
-    void getServerTimeZone_returnsUtc() {
-        TimeZone serverTz = TimeZoneUtils.getServerTimeZone();
+    void getUtcTimeZone_returnsUtc() {
+        TimeZone serverTz = TimeZoneUtils.getUtcTimeZone();
         assertEquals("UTC", serverTz.getID());
+    }
+
+    // ===== Null Validation Tests =====
+
+    @Test
+    void toUserZone_LocalDateTime_throwsForNull() {
+        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.toUserZone((LocalDateTime) null));
+    }
+
+    @Test
+    void toUtc_LocalDateTime_throwsForNull() {
+        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.toUtc((LocalDateTime) null));
+    }
+
+    @Test
+    void toUserZone_Date_returnsNullForNull() {
+        assertNull(TimeZoneUtils.toUserZone((Date) null));
+    }
+
+    @Test
+    void toUtc_Date_returnsNullForNull() {
+        assertNull(TimeZoneUtils.toUtc((Date) null));
+    }
+
+    @Test
+    void toUserZone_Instant_throwsForNull() {
+        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.toUserZone((Instant) null));
+    }
+
+    @Test
+    void convert_throwsForNullTime() {
+        assertThrows(IllegalArgumentException.class, () ->
+            TimeZoneUtils.convert(null, ZoneOffset.UTC, ZoneId.of("Asia/Tokyo")));
+    }
+
+    @Test
+    void convert_throwsForNullFrom() {
+        LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
+        assertThrows(IllegalArgumentException.class, () ->
+            TimeZoneUtils.convert(time, null, ZoneId.of("Asia/Tokyo")));
+    }
+
+    @Test
+    void convert_throwsForNullTo() {
+        LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
+        assertThrows(IllegalArgumentException.class, () ->
+            TimeZoneUtils.convert(time, ZoneOffset.UTC, null));
+    }
+
+    @Test
+    void format_LocalDateTime_throwsForNull() {
+        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.format((LocalDateTime) null));
+    }
+
+    @Test
+    void format_withPattern_throwsForNullTime() {
+        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.format(null, "yyyy-MM-dd"));
+    }
+
+    @Test
+    void format_withPattern_throwsForNullPattern() {
+        LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
+        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.format(time, null));
+    }
+
+    @Test
+    void format_withZone_throwsForNullTime() {
+        assertThrows(IllegalArgumentException.class, () ->
+            TimeZoneUtils.format(null, "yyyy-MM-dd", ZoneId.of("Asia/Tokyo")));
+    }
+
+    @Test
+    void format_withZone_throwsForNullPattern() {
+        LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
+        assertThrows(IllegalArgumentException.class, () ->
+            TimeZoneUtils.format(time, null, ZoneId.of("Asia/Tokyo")));
+    }
+
+    @Test
+    void format_withZone_throwsForNullZone() {
+        LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
+        assertThrows(IllegalArgumentException.class, () ->
+            TimeZoneUtils.format(time, "yyyy-MM-dd", null));
+    }
+
+    @Test
+    void parse_throwsForNullText() {
+        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.parse((String) null));
+    }
+
+    @Test
+    void parse_withPattern_throwsForNullText() {
+        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.parse(null, "yyyy-MM-dd"));
+    }
+
+    @Test
+    void parse_withPattern_throwsForNullPattern() {
+        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.parse("2024-01-01 00:00:00", null));
     }
 
     // ===== Current Time Tests =====

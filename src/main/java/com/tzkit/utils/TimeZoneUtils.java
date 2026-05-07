@@ -40,7 +40,7 @@ public final class TimeZoneUtils {
         return zoneId.getRules().getOffset(Instant.now());
     }
 
-    public static TimeZone getServerTimeZone() {
+    public static TimeZone getUtcTimeZone() {
         return TimeZone.getTimeZone("UTC");
     }
 
@@ -73,6 +73,9 @@ public final class TimeZoneUtils {
     // ===== Timezone Conversion =====
 
     public static LocalDateTime toUserZone(LocalDateTime utcTime) {
+        if (utcTime == null) {
+            throw new IllegalArgumentException("utcTime must not be null");
+        }
         ZoneId userZone = getUserZoneId();
         if (userZone == null) {
             userZone = DEFAULT_ZONE;
@@ -83,6 +86,9 @@ public final class TimeZoneUtils {
     }
 
     public static LocalDateTime toUtc(LocalDateTime userTime) {
+        if (userTime == null) {
+            throw new IllegalArgumentException("userTime must not be null");
+        }
         ZoneId userZone = getUserZoneId();
         if (userZone == null) {
             userZone = DEFAULT_ZONE;
@@ -93,14 +99,23 @@ public final class TimeZoneUtils {
     }
 
     public static Date toUserZone(Date utcDate) {
+        if (utcDate == null) {
+            return null;
+        }
         return utcDate; // Date is timezone-agnostic
     }
 
     public static Date toUtc(Date userDate) {
+        if (userDate == null) {
+            return null;
+        }
         return userDate; // Date is timezone-agnostic
     }
 
     public static LocalDateTime toUserZone(Instant instant) {
+        if (instant == null) {
+            throw new IllegalArgumentException("instant must not be null");
+        }
         ZoneId userZone = getUserZoneId();
         if (userZone == null) {
             userZone = DEFAULT_ZONE;
@@ -109,6 +124,15 @@ public final class TimeZoneUtils {
     }
 
     public static LocalDateTime convert(LocalDateTime time, ZoneId from, ZoneId to) {
+        if (time == null) {
+            throw new IllegalArgumentException("time must not be null");
+        }
+        if (from == null) {
+            throw new IllegalArgumentException("from zone must not be null");
+        }
+        if (to == null) {
+            throw new IllegalArgumentException("to zone must not be null");
+        }
         return time.atZone(from)
             .withZoneSameInstant(to)
             .toLocalDateTime();
@@ -117,16 +141,35 @@ public final class TimeZoneUtils {
     // ===== Formatting =====
 
     public static String format(LocalDateTime utcTime) {
-        return format(utcTime, DEFAULT_PATTERN);
+        if (utcTime == null) {
+            throw new IllegalArgumentException("utcTime must not be null");
+        }
+        LocalDateTime userTime = toUserZone(utcTime);
+        return DEFAULT_FORMATTER.format(userTime);
     }
 
     public static String format(LocalDateTime utcTime, String pattern) {
+        if (utcTime == null) {
+            throw new IllegalArgumentException("utcTime must not be null");
+        }
+        if (pattern == null) {
+            throw new IllegalArgumentException("pattern must not be null");
+        }
         LocalDateTime userTime = toUserZone(utcTime);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
         return formatter.format(userTime);
     }
 
     public static String format(LocalDateTime utcTime, String pattern, ZoneId zoneId) {
+        if (utcTime == null) {
+            throw new IllegalArgumentException("utcTime must not be null");
+        }
+        if (pattern == null) {
+            throw new IllegalArgumentException("pattern must not be null");
+        }
+        if (zoneId == null) {
+            throw new IllegalArgumentException("zoneId must not be null");
+        }
         LocalDateTime targetTime = utcTime.atZone(ZoneOffset.UTC)
             .withZoneSameInstant(zoneId)
             .toLocalDateTime();
@@ -137,10 +180,19 @@ public final class TimeZoneUtils {
     // ===== Parsing =====
 
     public static LocalDateTime parse(String text) {
+        if (text == null) {
+            throw new IllegalArgumentException("text must not be null");
+        }
         return LocalDateTime.parse(text, DEFAULT_FORMATTER);
     }
 
     public static LocalDateTime parse(String text, String pattern) {
+        if (text == null) {
+            throw new IllegalArgumentException("text must not be null");
+        }
+        if (pattern == null) {
+            throw new IllegalArgumentException("pattern must not be null");
+        }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
         return LocalDateTime.parse(text, formatter);
     }
