@@ -194,6 +194,17 @@ class TimeZoneFilterTest {
     }
 
     @Test
+    void testExplicitGMTTimezone() throws Exception {
+        request.addHeader("Time-Zone", "GMT");
+
+        filter.doFilter(request, response, filterChain);
+
+        TimeZone tz = getCapturedTimezone();
+        assertNotNull(tz);
+        assertEquals("GMT", tz.getID());
+    }
+
+    @Test
     void testMalformedOffsetFormat() throws Exception {
         request.addHeader("Time-Zone-Offset", "abc");
 

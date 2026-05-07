@@ -94,7 +94,12 @@ public class TimeZoneFilter implements Filter {
         try {
             String normalized = normalizeOffset(offset);
             if (normalized != null) {
-                return TimeZone.getTimeZone("GMT" + normalized);
+                TimeZone tz = TimeZone.getTimeZone("GMT" + normalized);
+                // TimeZone.getTimeZone returns GMT for invalid offsets like "+99:99"
+                if (!tz.getID().equals("GMT") || ("GMT" + normalized).equals("GMT")) {
+                    return tz;
+                }
+                return null;
             }
             return null;
         } catch (Exception e) {
