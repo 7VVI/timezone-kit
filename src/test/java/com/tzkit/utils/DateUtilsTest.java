@@ -11,7 +11,7 @@ import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TimeZoneUtilsTest {
+class DateUtilsTest {
 
     private static final TimeZone TZ_NEW_YORK = TimeZone.getTimeZone("America/New_York");
     private static final TimeZone TZ_TOKYO = TimeZone.getTimeZone("Asia/Tokyo");
@@ -30,36 +30,31 @@ class TimeZoneUtilsTest {
     // ===== Timezone Access Tests =====
 
     @Test
-    void getUserTimeZone_whenNotSet_returnsNull() {
-        assertNull(TimeZoneUtils.getUserTimeZone());
+    void getTimeZone_whenNotSet_returnsDefault() {
+        assertEquals(TZ_SHANGHAI, DateUtils.getTimeZone());
     }
 
     @Test
-    void getUserTimeZone_whenSet_returnsTimeZone() {
+    void getTimeZone_whenSet_returnsTimeZone() {
         TimeZoneContext.set(TZ_NEW_YORK);
-        assertEquals(TZ_NEW_YORK, TimeZoneUtils.getUserTimeZone());
+        assertEquals(TZ_NEW_YORK, DateUtils.getTimeZone());
     }
 
     @Test
-    void getUserZoneId_whenNotSet_returnsNull() {
-        assertNull(TimeZoneUtils.getUserZoneId());
+    void getZoneId_whenNotSet_returnsDefault() {
+        assertEquals(ZoneId.of("Asia/Shanghai"), DateUtils.getZoneId());
     }
 
     @Test
-    void getUserZoneId_whenSet_returnsZoneId() {
+    void getZoneId_whenSet_returnsZoneId() {
         TimeZoneContext.set(TZ_NEW_YORK);
-        assertEquals(TZ_NEW_YORK.toZoneId(), TimeZoneUtils.getUserZoneId());
+        assertEquals(TZ_NEW_YORK.toZoneId(), DateUtils.getZoneId());
     }
 
     @Test
-    void getUserZoneOffset_whenNotSet_returnsNull() {
-        assertNull(TimeZoneUtils.getUserZoneOffset());
-    }
-
-    @Test
-    void getUserZoneOffset_whenSet_returnsOffset() {
+    void getZoneOffset_whenSet_returnsOffset() {
         TimeZoneContext.set(TZ_TOKYO);
-        ZoneOffset offset = TimeZoneUtils.getUserZoneOffset();
+        ZoneOffset offset = DateUtils.getZoneOffset();
         assertNotNull(offset);
         // Tokyo is UTC+9
         assertEquals(ZoneOffset.ofHours(9), offset);
@@ -67,7 +62,7 @@ class TimeZoneUtilsTest {
 
     @Test
     void getUtcTimeZone_returnsUtc() {
-        TimeZone serverTz = TimeZoneUtils.getUtcTimeZone();
+        TimeZone serverTz = DateUtils.getUtcTimeZone();
         assertEquals("UTC", serverTz.getID());
     }
 
@@ -75,141 +70,124 @@ class TimeZoneUtilsTest {
 
     @Test
     void toUserZone_LocalDateTime_throwsForNull() {
-        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.toUserZone((LocalDateTime) null));
+        assertThrows(IllegalArgumentException.class, () -> DateUtils.toUserZone((LocalDateTime) null));
     }
 
     @Test
     void toUtc_LocalDateTime_throwsForNull() {
-        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.toUtc((LocalDateTime) null));
+        assertThrows(IllegalArgumentException.class, () -> DateUtils.toUtc((LocalDateTime) null));
     }
 
     @Test
     void toUserZone_Date_returnsNullForNull() {
-        assertNull(TimeZoneUtils.toUserZone((Date) null));
+        assertNull(DateUtils.toUserZone((Date) null));
     }
 
     @Test
     void toUtc_Date_returnsNullForNull() {
-        assertNull(TimeZoneUtils.toUtc((Date) null));
+        assertNull(DateUtils.toUtc((Date) null));
     }
 
     @Test
     void toUserZone_Instant_throwsForNull() {
-        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.toUserZone((Instant) null));
+        assertThrows(IllegalArgumentException.class, () -> DateUtils.toUserZone((Instant) null));
     }
 
     @Test
     void convert_throwsForNullTime() {
         assertThrows(IllegalArgumentException.class, () ->
-            TimeZoneUtils.convert(null, ZoneOffset.UTC, ZoneId.of("Asia/Tokyo")));
+            DateUtils.convert(null, ZoneOffset.UTC, ZoneId.of("Asia/Tokyo")));
     }
 
     @Test
     void convert_throwsForNullFrom() {
         LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
         assertThrows(IllegalArgumentException.class, () ->
-            TimeZoneUtils.convert(time, null, ZoneId.of("Asia/Tokyo")));
+            DateUtils.convert(time, null, ZoneId.of("Asia/Tokyo")));
     }
 
     @Test
     void convert_throwsForNullTo() {
         LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
         assertThrows(IllegalArgumentException.class, () ->
-            TimeZoneUtils.convert(time, ZoneOffset.UTC, null));
+            DateUtils.convert(time, ZoneOffset.UTC, null));
     }
 
     @Test
     void format_LocalDateTime_throwsForNull() {
-        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.format((LocalDateTime) null));
+        assertThrows(IllegalArgumentException.class, () -> DateUtils.format((LocalDateTime) null));
     }
 
     @Test
     void format_withPattern_throwsForNullTime() {
-        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.format(null, "yyyy-MM-dd"));
+        assertThrows(IllegalArgumentException.class, () -> DateUtils.format((LocalDateTime) null, "yyyy-MM-dd"));
     }
 
     @Test
     void format_withPattern_throwsForNullPattern() {
         LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
-        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.format(time, null));
+        assertThrows(IllegalArgumentException.class, () -> DateUtils.format(time, null));
     }
 
     @Test
     void format_withZone_throwsForNullTime() {
         assertThrows(IllegalArgumentException.class, () ->
-            TimeZoneUtils.format(null, "yyyy-MM-dd", ZoneId.of("Asia/Tokyo")));
+            DateUtils.format((LocalDateTime) null, "yyyy-MM-dd", ZoneId.of("Asia/Tokyo")));
     }
 
     @Test
     void format_withZone_throwsForNullPattern() {
         LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
         assertThrows(IllegalArgumentException.class, () ->
-            TimeZoneUtils.format(time, null, ZoneId.of("Asia/Tokyo")));
+            DateUtils.format(time, null, ZoneId.of("Asia/Tokyo")));
     }
 
     @Test
     void format_withZone_throwsForNullZone() {
         LocalDateTime time = LocalDateTime.of(2024, 1, 1, 0, 0);
         assertThrows(IllegalArgumentException.class, () ->
-            TimeZoneUtils.format(time, "yyyy-MM-dd", null));
-    }
-
-    @Test
-    void parse_throwsForNullText() {
-        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.parse((String) null));
-    }
-
-    @Test
-    void parse_withPattern_throwsForNullText() {
-        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.parse(null, "yyyy-MM-dd"));
-    }
-
-    @Test
-    void parse_withPattern_throwsForNullPattern() {
-        assertThrows(IllegalArgumentException.class, () -> TimeZoneUtils.parse("2024-01-01 00:00:00", null));
+            DateUtils.format(time, "yyyy-MM-dd", null));
     }
 
     // ===== Current Time Tests =====
 
     @Test
     void now_whenContextNotSet_usesDefaultZone() {
-        LocalDateTime now = TimeZoneUtils.now();
+        LocalDateTime now = DateUtils.now();
         assertNotNull(now);
-        // Should use default zone (Asia/Shanghai)
-        // Just verify it returns a valid datetime
         assertTrue(now.isBefore(LocalDateTime.now().plusMinutes(1)));
     }
 
     @Test
     void now_whenContextSet_usesUserZone() {
         TimeZoneContext.set(TZ_NEW_YORK);
-        LocalDateTime now = TimeZoneUtils.now();
+        LocalDateTime now = DateUtils.now();
         assertNotNull(now);
     }
 
     @Test
     void today_whenContextNotSet_usesDefaultZone() {
-        LocalDate today = TimeZoneUtils.today();
+        LocalDate today = DateUtils.today();
         assertNotNull(today);
     }
 
     @Test
     void today_whenContextSet_usesUserZone() {
         TimeZoneContext.set(TZ_TOKYO);
-        LocalDate today = TimeZoneUtils.today();
+        LocalDate today = DateUtils.today();
         assertNotNull(today);
     }
 
     @Test
     void nowUtc_returnsUtcTime() {
-        LocalDateTime utcNow = TimeZoneUtils.nowUtc();
+        LocalDateTime utcNow = DateUtils.nowUtc();
         assertNotNull(utcNow);
         assertEquals(ZoneOffset.UTC, utcNow.atZone(ZoneOffset.UTC).getOffset());
     }
 
     @Test
     void nowInstant_returnsCurrentInstant() {
-        Instant instant = TimeZoneUtils.nowInstant();
+        Instant instant = DateUtils.nowInstant();
         assertNotNull(instant);
         assertTrue(instant.isBefore(Instant.now().plusSeconds(1)));
     }
@@ -221,7 +199,7 @@ class TimeZoneUtilsTest {
         // UTC time: 2024-01-01 00:00:00
         LocalDateTime utcTime = LocalDateTime.of(2024, 1, 1, 0, 0);
 
-        LocalDateTime userTime = TimeZoneUtils.toUserZone(utcTime);
+        LocalDateTime userTime = DateUtils.toUserZone(utcTime);
 
         // Default zone is Asia/Shanghai (UTC+8)
         assertEquals(LocalDateTime.of(2024, 1, 1, 8, 0), userTime);
@@ -234,7 +212,7 @@ class TimeZoneUtilsTest {
         // UTC time: 2024-01-01 12:00:00 (winter, no DST)
         LocalDateTime utcTime = LocalDateTime.of(2024, 1, 1, 12, 0);
 
-        LocalDateTime userTime = TimeZoneUtils.toUserZone(utcTime);
+        LocalDateTime userTime = DateUtils.toUserZone(utcTime);
 
         // New York in winter is UTC-5
         assertEquals(LocalDateTime.of(2024, 1, 1, 7, 0), userTime);
@@ -247,7 +225,7 @@ class TimeZoneUtilsTest {
         // UTC time: 2024-01-01 00:00:00
         LocalDateTime utcTime = LocalDateTime.of(2024, 1, 1, 0, 0);
 
-        LocalDateTime userTime = TimeZoneUtils.toUserZone(utcTime);
+        LocalDateTime userTime = DateUtils.toUserZone(utcTime);
 
         // Tokyo is UTC+9
         assertEquals(LocalDateTime.of(2024, 1, 1, 9, 0), userTime);
@@ -258,7 +236,7 @@ class TimeZoneUtilsTest {
         // User time in default zone (Asia/Shanghai, UTC+8)
         LocalDateTime userTime = LocalDateTime.of(2024, 1, 1, 8, 0);
 
-        LocalDateTime utcTime = TimeZoneUtils.toUtc(userTime);
+        LocalDateTime utcTime = DateUtils.toUtc(userTime);
 
         // Should be UTC midnight
         assertEquals(LocalDateTime.of(2024, 1, 1, 0, 0), utcTime);
@@ -271,7 +249,7 @@ class TimeZoneUtilsTest {
         // New York time: 2024-01-01 07:00 (winter, UTC-5)
         LocalDateTime userTime = LocalDateTime.of(2024, 1, 1, 7, 0);
 
-        LocalDateTime utcTime = TimeZoneUtils.toUtc(userTime);
+        LocalDateTime utcTime = DateUtils.toUtc(userTime);
 
         // Should be UTC noon
         assertEquals(LocalDateTime.of(2024, 1, 1, 12, 0), utcTime);
@@ -284,7 +262,7 @@ class TimeZoneUtilsTest {
         // Tokyo time: 2024-01-01 09:00
         LocalDateTime userTime = LocalDateTime.of(2024, 1, 1, 9, 0);
 
-        LocalDateTime utcTime = TimeZoneUtils.toUtc(userTime);
+        LocalDateTime utcTime = DateUtils.toUtc(userTime);
 
         // Should be UTC midnight
         assertEquals(LocalDateTime.of(2024, 1, 1, 0, 0), utcTime);
@@ -295,14 +273,14 @@ class TimeZoneUtilsTest {
     @Test
     void toUserZone_withDate_returnsSameDate() {
         Date date = new Date();
-        Date result = TimeZoneUtils.toUserZone(date);
+        Date result = DateUtils.toUserZone(date);
         assertEquals(date, result);
     }
 
     @Test
     void toUtc_withDate_returnsSameDate() {
         Date date = new Date();
-        Date result = TimeZoneUtils.toUtc(date);
+        Date result = DateUtils.toUtc(date);
         assertEquals(date, result);
     }
 
@@ -313,7 +291,7 @@ class TimeZoneUtilsTest {
         // 2024-01-01 00:00:00 UTC
         Instant instant = Instant.parse("2024-01-01T00:00:00Z");
 
-        LocalDateTime userTime = TimeZoneUtils.toUserZone(instant);
+        LocalDateTime userTime = DateUtils.toUserZone(instant);
 
         // Default zone is Asia/Shanghai (UTC+8)
         assertEquals(LocalDateTime.of(2024, 1, 1, 8, 0), userTime);
@@ -325,7 +303,7 @@ class TimeZoneUtilsTest {
 
         Instant instant = Instant.parse("2024-01-01T00:00:00Z");
 
-        LocalDateTime userTime = TimeZoneUtils.toUserZone(instant);
+        LocalDateTime userTime = DateUtils.toUserZone(instant);
 
         assertEquals(LocalDateTime.of(2024, 1, 1, 9, 0), userTime);
     }
@@ -337,7 +315,7 @@ class TimeZoneUtilsTest {
         // 2024-01-01 00:00 in UTC
         LocalDateTime utcTime = LocalDateTime.of(2024, 1, 1, 0, 0);
 
-        LocalDateTime tokyoTime = TimeZoneUtils.convert(utcTime, ZoneOffset.UTC, ZoneId.of("Asia/Tokyo"));
+        LocalDateTime tokyoTime = DateUtils.convert(utcTime, ZoneOffset.UTC, ZoneId.of("Asia/Tokyo"));
 
         // Tokyo is UTC+9
         assertEquals(LocalDateTime.of(2024, 1, 1, 9, 0), tokyoTime);
@@ -348,7 +326,7 @@ class TimeZoneUtilsTest {
         // 2024-01-01 09:00 in Tokyo
         LocalDateTime tokyoTime = LocalDateTime.of(2024, 1, 1, 9, 0);
 
-        LocalDateTime utcTime = TimeZoneUtils.convert(tokyoTime, ZoneId.of("Asia/Tokyo"), ZoneOffset.UTC);
+        LocalDateTime utcTime = DateUtils.convert(tokyoTime, ZoneId.of("Asia/Tokyo"), ZoneOffset.UTC);
 
         assertEquals(LocalDateTime.of(2024, 1, 1, 0, 0), utcTime);
     }
@@ -360,7 +338,7 @@ class TimeZoneUtilsTest {
         TimeZoneContext.set(TZ_SHANGHAI);
         LocalDateTime utcTime = LocalDateTime.of(2024, 1, 1, 0, 0);
 
-        String formatted = TimeZoneUtils.format(utcTime);
+        String formatted = DateUtils.format(utcTime);
 
         assertEquals("2024-01-01 08:00:00", formatted);
     }
@@ -370,7 +348,7 @@ class TimeZoneUtilsTest {
         TimeZoneContext.set(TZ_SHANGHAI);
         LocalDateTime utcTime = LocalDateTime.of(2024, 1, 1, 0, 0);
 
-        String formatted = TimeZoneUtils.format(utcTime, "yyyy/MM/dd HH:mm");
+        String formatted = DateUtils.format(utcTime, "yyyy/MM/dd HH:mm");
 
         assertEquals("2024/01/01 08:00", formatted);
     }
@@ -379,7 +357,7 @@ class TimeZoneUtilsTest {
     void format_withCustomZone() {
         LocalDateTime utcTime = LocalDateTime.of(2024, 1, 1, 0, 0);
 
-        String formatted = TimeZoneUtils.format(utcTime, "yyyy-MM-dd HH:mm", ZoneId.of("Asia/Tokyo"));
+        String formatted = DateUtils.format(utcTime, "yyyy-MM-dd HH:mm", ZoneId.of("Asia/Tokyo"));
 
         assertEquals("2024-01-01 09:00", formatted);
     }
@@ -389,7 +367,7 @@ class TimeZoneUtilsTest {
         TimeZoneContext.set(TZ_NEW_YORK);
         LocalDateTime utcTime = LocalDateTime.of(2024, 1, 1, 12, 0);
 
-        String formatted = TimeZoneUtils.format(utcTime, "yyyy-MM-dd HH:mm:ss");
+        String formatted = DateUtils.format(utcTime, "yyyy-MM-dd HH:mm:ss");
 
         // New York in winter (Jan) is UTC-5
         assertEquals("2024-01-01 07:00:00", formatted);
@@ -401,7 +379,7 @@ class TimeZoneUtilsTest {
     void parse_withDefaultPattern() {
         String text = "2024-01-15 10:30:45";
 
-        LocalDateTime result = TimeZoneUtils.parse(text);
+        LocalDateTime result = DateUtils.parseLdt(text);
 
         assertEquals(LocalDateTime.of(2024, 1, 15, 10, 30, 45), result);
     }
@@ -410,7 +388,7 @@ class TimeZoneUtilsTest {
     void parse_withCustomPattern() {
         String text = "15/01/2024 10:30";
 
-        LocalDateTime result = TimeZoneUtils.parse(text, "dd/MM/yyyy HH:mm");
+        LocalDateTime result = DateUtils.parse(text, "dd/MM/yyyy HH:mm");
 
         assertEquals(LocalDateTime.of(2024, 1, 15, 10, 30), result);
     }
@@ -419,9 +397,39 @@ class TimeZoneUtilsTest {
     void parse_withIsoPattern() {
         String text = "2024-01-15T10:30:45";
 
-        LocalDateTime result = TimeZoneUtils.parse(text, "yyyy-MM-dd'T'HH:mm:ss");
+        LocalDateTime result = DateUtils.parse(text, "yyyy-MM-dd'T'HH:mm:ss");
 
         assertEquals(LocalDateTime.of(2024, 1, 15, 10, 30, 45), result);
+    }
+
+    // ===== Multi-format Date Parsing Tests =====
+
+    @Test
+    void parseDate_withStandardFormat() {
+        String text = "2024-01-15 10:30:45";
+        Date result = DateUtils.parse(text);
+        assertNotNull(result);
+    }
+
+    @Test
+    void parseDate_withDateOnly() {
+        String text = "2024-01-15";
+        Date result = DateUtils.parse(text);
+        assertNotNull(result);
+    }
+
+    @Test
+    void parseDate_withSlashFormat() {
+        String text = "2024/01/15 10:30:45";
+        Date result = DateUtils.parse(text);
+        assertNotNull(result);
+    }
+
+    @Test
+    void parseDate_withPureNumber() {
+        String text = "20240115103045";
+        Date result = DateUtils.parse(text);
+        assertNotNull(result);
     }
 
     // ===== Round-trip Tests =====
@@ -432,10 +440,10 @@ class TimeZoneUtilsTest {
         LocalDateTime original = LocalDateTime.of(2024, 6, 15, 14, 30, 0);
 
         // Convert to user zone (treating original as UTC)
-        LocalDateTime userTime = TimeZoneUtils.toUserZone(original);
+        LocalDateTime userTime = DateUtils.toUserZone(original);
 
         // Convert back to UTC
-        LocalDateTime backToUtc = TimeZoneUtils.toUtc(userTime);
+        LocalDateTime backToUtc = DateUtils.toUtc(userTime);
 
         assertEquals(original, backToUtc);
     }
@@ -445,11 +453,11 @@ class TimeZoneUtilsTest {
         TimeZoneContext.set(TZ_SHANGHAI);
         LocalDateTime utcTime = LocalDateTime.of(2024, 1, 1, 0, 0, 0);
 
-        String formatted = TimeZoneUtils.format(utcTime);
-        LocalDateTime parsed = TimeZoneUtils.parse(formatted);
+        String formatted = DateUtils.format(utcTime);
+        LocalDateTime parsed = DateUtils.parseLdt(formatted);
 
         // Parsed time is in user zone, need to convert back to UTC
-        LocalDateTime backToUtc = TimeZoneUtils.toUtc(parsed);
+        LocalDateTime backToUtc = DateUtils.toUtc(parsed);
 
         assertEquals(utcTime, backToUtc);
     }

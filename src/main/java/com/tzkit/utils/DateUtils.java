@@ -10,25 +10,109 @@ import cn.hutool.core.util.CharUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
+import com.tzkit.context.TimeZoneContext;
 
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import static cn.hutool.core.date.DatePattern.*;
 
 /**
- * 多格式日期解析工具类
+ * 统一的时间工具类
+ * 包含：多格式解析、时区转换、格式化、当前时间获取
  */
 public final class DateUtils {
 
+    private static final String DEFAULT_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private static final DateTimeFormatter DEFAULT_FORMATTER =
+        DateTimeFormatter.ofPattern(DEFAULT_PATTERN, Locale.ENGLISH);
+    private static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Shanghai");
+    private static final TimeZone DEFAULT_TIMEZONE = TimeZone.getTimeZone("Asia/Shanghai");
+
+    // LocalDateTime支持的多种格式
+    private static final DateTimeFormatter[] LDT_FORMATTERS = {
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.ENGLISH),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH),
+        DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss", Locale.ENGLISH),
+        DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm", Locale.ENGLISH),
+        DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.ENGLISH),
+        DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+        DateTimeFormatter.ISO_LOCAL_DATE
+    };
+
     private DateUtils() {}
 
+    // ===== 时区获取 =====
+
     /**
-     * 自动解析多种格式的日期字符串
-     * @param dateStr 日期字符串
-     * @param timeZone 时区
-     * @return Date对象
+     * 获取用户时区，未设置时返回默认时区 Asia/Shanghai
+     */
+    public static TimeZone getTimeZone() {
+        TimeZone tz = TimeZoneContext.get();
+        return tz != null ? tz : DEFAULT_TIMEZONE;
+    }
+
+    /**
+     * 获取用户ZoneId，未设置时返回默认 ZoneId Asia/Shanghai
+     */
+    public static ZoneId getZoneId() {
+        ZoneId zone = TimeZoneContext.getZoneId();
+        return zone != null ? zone : DEFAULT_ZONE;
+    }
+
+    /**
+     * 获取用户时区的ZoneOffset
+     */
+    public static ZoneOffset getZoneOffset() {
+        return getZoneId().getRules().getOffset(Instant.now());
+    }
+
+    /**
+     * 获取UTC时区
+     */
+    public static TimeZone getUtcTimeZone() {
+        return TimeZone.getTimeZone("UTC");
+    }
+
+    // ===== 当前时间 =====
+
+    /**
+     * 获取用户时区的当前LocalDateTime
+     */
+    public static LocalDateTime now() {
+        return LocalDateTime.now(getZoneId());
+    }
+
+    /**
+     * 获取用户时区的当前LocalDate
+     */
+    public static LocalDate today() {
+        return LocalDate.now(getZoneId());
+    }
+
+    /**
+     * 获取UTC当前LocalDateTime
+     */
+    public static LocalDateTime nowUtc() {
+        return LocalDateTime.now(ZoneOffset.UTC);
+    }
+
+    /**
+     * 获取当前Instant
+     */
+    public static Instant nowInstant() {
+        return Instant.now();
+    }
+
+    // ===== 多格式解析 =====
+
+    /**
+     * 自动解析多种格式的日期字符串，返回java.util.Date
      */
     public static Date parse(CharSequence dateStr, TimeZone timeZone) {
         if (StrUtil.isBlank(dateStr)) {
@@ -87,9 +171,55 @@ public final class DateUtils {
      * 自动解析，使用默认时区(Asia/Shanghai)
      */
     public static Date parse(CharSequence dateStr) {
-        return parse(dateStr, TimeZone.getTimeZone("Asia/Shanghai"));
+        return parse(dateStr, getTimeZone());
     }
 
+    /**
+     * 解析LocalDateTime，支持多种格式
+     */
+    public static LocalDateTime parseLdt(CharSequence text) {
+        if (StrUtil.isBlank(text)) {
+            return null;
+        }
+        String str = text.toString().trim();
+        for (DateTimeFormatter formatter : LDT_FORMATTERS) {
+            try {
+                if (str.length() <= 10) {
+                    return LocalDateTime.parse(str + " 00:00:00", LDT_FORMATTERS[0]);
+                }
+                return LocalDateTime.parse(str, formatter);
+            } catch (Exception ignored) {}
+        }
+        throw new DateException("No format fit for date String: {}", text);
+    }
+
+    /**
+     * 使用指定格式解析LocalDateTime
+     */
+    public static LocalDateTime parse(String text, String pattern) {
+        if (text == null) {
+            throw new IllegalArgumentException("text must not be null");
+        }
+        if (pattern == null) {
+            throw new IllegalArgumentException("pattern must not be null");
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH);
+        try {
+            return LocalDateTime.parse(text, formatter);
+        } catch (Exception e) {
+            // Try parsing as LocalDate then convert to LocalDateTime
+            try {
+                LocalDate date = LocalDate.parse(text, formatter);
+                return date.atStartOfDay();
+            } catch (Exception ex) {
+                throw new IllegalArgumentException("Failed to parse date: " + text, ex);
+            }
+        }
+    }
+
+    /**
+     * 标准化日期字符串
+     */
     private static String normalize(CharSequence dateStr) {
         if (StrUtil.isBlank(dateStr)) {
             return StrUtil.str(dateStr);
@@ -118,5 +248,137 @@ public final class DateUtils {
         }
 
         return builder.toString();
+    }
+
+    // ===== 时区转换 =====
+
+    /**
+     * 将UTC LocalDateTime转换为用户时区
+     */
+    public static LocalDateTime toUserZone(LocalDateTime utcTime) {
+        if (utcTime == null) {
+            throw new IllegalArgumentException("utcTime must not be null");
+        }
+        return utcTime.atZone(ZoneOffset.UTC)
+            .withZoneSameInstant(getZoneId())
+            .toLocalDateTime();
+    }
+
+    /**
+     * 将用户时区LocalDateTime转换为UTC
+     */
+    public static LocalDateTime toUtc(LocalDateTime userTime) {
+        if (userTime == null) {
+            throw new IllegalArgumentException("userTime must not be null");
+        }
+        return userTime.atZone(getZoneId())
+            .withZoneSameInstant(ZoneOffset.UTC)
+            .toLocalDateTime();
+    }
+
+    /**
+     * Date对象时区转换（Date本身是时区无关的，直接返回）
+     */
+    public static Date toUserZone(Date utcDate) {
+        return utcDate; // Date is timezone-agnostic
+    }
+
+    public static Date toUtc(Date userDate) {
+        return userDate; // Date is timezone-agnostic
+    }
+
+    /**
+     * 将Instant转换为用户时区的LocalDateTime
+     */
+    public static LocalDateTime toUserZone(Instant instant) {
+        if (instant == null) {
+            throw new IllegalArgumentException("instant must not be null");
+        }
+        return instant.atZone(getZoneId()).toLocalDateTime();
+    }
+
+    /**
+     * 在指定时区之间转换LocalDateTime
+     */
+    public static LocalDateTime convert(LocalDateTime time, ZoneId from, ZoneId to) {
+        if (time == null) {
+            throw new IllegalArgumentException("time must not be null");
+        }
+        if (from == null) {
+            throw new IllegalArgumentException("from zone must not be null");
+        }
+        if (to == null) {
+            throw new IllegalArgumentException("to zone must not be null");
+        }
+        return time.atZone(from)
+            .withZoneSameInstant(to)
+            .toLocalDateTime();
+    }
+
+    // ===== 格式化 =====
+
+    /**
+     * 格式化UTC LocalDateTime为用户时区字符串（默认格式 yyyy-MM-dd HH:mm:ss）
+     */
+    public static String format(LocalDateTime utcTime) {
+        if (utcTime == null) {
+            throw new IllegalArgumentException("utcTime must not be null");
+        }
+        LocalDateTime userTime = toUserZone(utcTime);
+        return DEFAULT_FORMATTER.format(userTime);
+    }
+
+    /**
+     * 格式化UTC LocalDateTime为用户时区字符串（指定格式）
+     */
+    public static String format(LocalDateTime utcTime, String pattern) {
+        if (utcTime == null) {
+            throw new IllegalArgumentException("utcTime must not be null");
+        }
+        if (pattern == null) {
+            throw new IllegalArgumentException("pattern must not be null");
+        }
+        LocalDateTime userTime = toUserZone(utcTime);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH);
+        return formatter.format(userTime);
+    }
+
+    /**
+     * 格式化UTC LocalDateTime为指定时区字符串（指定格式）
+     */
+    public static String format(LocalDateTime utcTime, String pattern, ZoneId zoneId) {
+        if (utcTime == null) {
+            throw new IllegalArgumentException("utcTime must not be null");
+        }
+        if (pattern == null) {
+            throw new IllegalArgumentException("pattern must not be null");
+        }
+        if (zoneId == null) {
+            throw new IllegalArgumentException("zoneId must not be null");
+        }
+        LocalDateTime targetTime = utcTime.atZone(ZoneOffset.UTC)
+            .withZoneSameInstant(zoneId)
+            .toLocalDateTime();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH);
+        return formatter.format(targetTime);
+    }
+
+    /**
+     * 格式化Date为字符串（使用用户时区）
+     */
+    public static String format(Date date, String pattern) {
+        if (date == null || pattern == null) {
+            return null;
+        }
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(pattern, Locale.ENGLISH);
+        sdf.setTimeZone(getTimeZone());
+        return sdf.format(date);
+    }
+
+    /**
+     * 格式化Date为字符串（默认格式 yyyy-MM-dd HH:mm:ss）
+     */
+    public static String format(Date date) {
+        return format(date, DEFAULT_PATTERN);
     }
 }

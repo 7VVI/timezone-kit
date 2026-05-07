@@ -6,12 +6,11 @@ import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
-import com.tzkit.context.TimeZoneContext;
+import com.tzkit.utils.DateUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -24,7 +23,6 @@ public class LocalDateTimeSerializer extends JsonSerializer<LocalDateTime>
     implements ContextualSerializer {
 
     private static final String DEFAULT_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    private static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Shanghai");
 
     private final String pattern;
     private final ZoneId timezone;
@@ -49,20 +47,12 @@ public class LocalDateTimeSerializer extends JsonSerializer<LocalDateTime>
 
         ZoneId zone = this.timezone;
         if (zone == null) {
-            zone = TimeZoneContext.getZoneId();
-            if (zone == null) {
-                zone = DEFAULT_ZONE;
-            }
+            zone = DateUtils.getZoneId();
         }
-
-        // Convert UTC LocalDateTime to user timezone
-        LocalDateTime userTime = value.atZone(ZoneOffset.UTC)
-            .withZoneSameInstant(zone)
-            .toLocalDateTime();
 
         DateTimeFormatter formatter =
             DateTimeFormatter.ofPattern(this.pattern, Locale.ENGLISH);
-        gen.writeString(formatter.format(userTime));
+        gen.writeString(formatter.format(DateUtils.convert(value, ZoneId.of("UTC"), zone)));
     }
 
     @Override

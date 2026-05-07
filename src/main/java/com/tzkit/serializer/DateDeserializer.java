@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import com.tzkit.context.TimeZoneContext;
 import com.tzkit.utils.DateUtils;
 
 import java.io.IOException;
@@ -19,13 +18,11 @@ import java.util.TimeZone;
 /**
  * Custom deserializer for java.util.Date.
  * Supports @JsonFormat annotation for per-field pattern and timezone overrides.
- * Falls back to TimeZoneContext for timezone resolution.
- * When no @JsonFormat pattern is specified, uses DateUtils for multi-format auto-parsing.
+ * Falls back to DateUtils for timezone resolution and multi-format auto-parsing.
  */
 public class DateDeserializer extends JsonDeserializer<Date> implements ContextualDeserializer {
 
     private static final String DEFAULT_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    private static final TimeZone DEFAULT_TIMEZONE = TimeZone.getTimeZone("Asia/Shanghai");
 
     private final String pattern;
     private final TimeZone timezone;
@@ -50,10 +47,7 @@ public class DateDeserializer extends JsonDeserializer<Date> implements Contextu
 
         TimeZone tz = this.timezone;
         if (tz == null) {
-            tz = TimeZoneContext.get();
-            if (tz == null) {
-                tz = DEFAULT_TIMEZONE;
-            }
+            tz = DateUtils.getTimeZone();
         }
 
         // If @JsonFormat specifies a pattern, use it for parsing
@@ -67,7 +61,7 @@ public class DateDeserializer extends JsonDeserializer<Date> implements Contextu
             }
         }
 
-        // Otherwise, use DateUtils for multi-format auto-parsing
+        // Use DateUtils for multi-format auto-parsing
         try {
             return DateUtils.parse(text, tz);
         } catch (Exception e) {

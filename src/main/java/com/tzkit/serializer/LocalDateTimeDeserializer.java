@@ -6,40 +6,23 @@ import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import com.tzkit.context.TimeZoneContext;
+import com.tzkit.utils.DateUtils;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 /**
  * Custom deserializer for java.time.LocalDateTime.
  * Parses date string in user timezone and converts to UTC LocalDateTime.
  * Supports @JsonFormat annotation for per-field pattern and timezone override.
- * Supports multiple date/time formats for flexible parsing.
+ * Uses DateUtils for flexible multi-format parsing.
  */
 public class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime>
     implements ContextualDeserializer {
 
     private static final ZoneId DEFAULT_ZONE = ZoneId.of("Asia/Shanghai");
-    private static final DateTimeFormatter DEFAULT_FORMATTER =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-
-    // Supported formats for flexible parsing
-    private static final DateTimeFormatter[] SUPPORTED_FORMATTERS = {
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH),
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.ENGLISH),
-        DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH),
-        DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss", Locale.ENGLISH),
-        DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm", Locale.ENGLISH),
-        DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.ENGLISH),
-        DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-        DateTimeFormatter.ISO_LOCAL_DATE
-    };
 
     private final String pattern;
     private final ZoneId timezone;
@@ -64,62 +47,23 @@ public class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime>
 
         ZoneId zone = this.timezone;
         if (zone == null) {
-            zone = TimeZoneContext.getZoneId();
-            if (zone == null) {
-                zone = DEFAULT_ZONE;
-            }
+            zone = DateUtils.getZoneId();
         }
 
         LocalDateTime userTime;
 
         // If a pattern is specified (e.g. from @JsonFormat), use it
         if (this.pattern != null && !this.pattern.isEmpty()) {
-            DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern(this.pattern, Locale.ENGLISH);
-            userTime = parseWithFormatter(text, formatter);
+            userTime = DateUtils.parse(text, this.pattern);
         } else {
-            // Try multiple formats
-            userTime = parseWithMultipleFormats(text);
+            // Use DateUtils multi-format parsing
+            userTime = DateUtils.parseLdt(text);
         }
 
         // Convert user timezone LocalDateTime to UTC
         return userTime.atZone(zone)
             .withZoneSameInstant(ZoneOffset.UTC)
             .toLocalDateTime();
-    }
-
-    private LocalDateTime parseWithFormatter(String text,
-                                             DateTimeFormatter formatter) {
-        try {
-            return LocalDateTime.parse(text, formatter);
-        } catch (Exception e) {
-            // Try parsing as LocalDate then convert to LocalDateTime
-            try {
-                LocalDate date = LocalDate.parse(text, formatter);
-                return date.atStartOfDay();
-            } catch (Exception ex) {
-                throw new IllegalArgumentException(
-                    "Failed to parse date: " + text, ex);
-            }
-        }
-    }
-
-    private LocalDateTime parseWithMultipleFormats(String text) {
-        for (DateTimeFormatter formatter : SUPPORTED_FORMATTERS) {
-            try {
-                return LocalDateTime.parse(text, formatter);
-            } catch (Exception ignored) {
-                // Continue trying next format
-            }
-        }
-        // Last resort: try ISO_LOCAL_DATE as fallback for pure date strings
-        try {
-            LocalDate date = LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);
-            return date.atStartOfDay();
-        } catch (Exception ignored) {
-        }
-        throw new IllegalArgumentException(
-            "No format fit for date String: " + text);
     }
 
     @Override

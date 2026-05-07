@@ -6,23 +6,20 @@ import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
-import com.tzkit.context.TimeZoneContext;
+import com.tzkit.utils.DateUtils;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.TimeZone;
 
 /**
  * Custom serializer for java.util.Date.
  * Supports @JsonFormat annotation for per-field pattern and timezone overrides.
- * Falls back to TimeZoneContext for timezone resolution.
+ * Falls back to TimeZoneContext for timezone resolution via DateUtils.
  */
 public class DateSerializer extends JsonSerializer<Date> implements ContextualSerializer {
 
     private static final String DEFAULT_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    private static final TimeZone DEFAULT_TIMEZONE = TimeZone.getTimeZone("Asia/Shanghai");
 
     private final String pattern;
     private final TimeZone timezone;
@@ -45,17 +42,18 @@ public class DateSerializer extends JsonSerializer<Date> implements ContextualSe
             return;
         }
 
-        TimeZone tz = this.timezone;
-        if (tz == null) {
-            tz = TimeZoneContext.get();
-            if (tz == null) {
-                tz = DEFAULT_TIMEZONE;
-            }
+        String result;
+        // If @JsonFormat specifies a custom timezone
+        if (this.timezone != null) {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(this.pattern, java.util.Locale.ENGLISH);
+            sdf.setTimeZone(this.timezone);
+            result = sdf.format(value);
+        } else {
+            // Use DateUtils with user timezone from context
+            result = DateUtils.format(value, this.pattern);
         }
 
-        SimpleDateFormat sdf = new SimpleDateFormat(this.pattern, Locale.ENGLISH);
-        sdf.setTimeZone(tz);
-        gen.writeString(sdf.format(value));
+        gen.writeString(result);
     }
 
     @Override
