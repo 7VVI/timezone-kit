@@ -15,6 +15,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DateSerializerTest {
 
+    // 2025-01-22 09:20:00 UTC
+    private static final long TEST_EPOCH_MILLIS = 1737537600000L;
+
     private ObjectMapper mapper;
 
     @BeforeEach
@@ -47,7 +50,7 @@ class DateSerializerTest {
         TimeZoneContext.set(TimeZone.getTimeZone("Asia/Shanghai"));
 
         // 2025-01-22 09:20:00 UTC = 1737537600000 epoch millis
-        Date utcDate = new Date(1737537600000L);
+        Date utcDate = new Date(TEST_EPOCH_MILLIS);
         TestBean bean = new TestBean();
         bean.setDate(utcDate);
 
@@ -62,7 +65,7 @@ class DateSerializerTest {
         TimeZoneContext.set(TimeZone.getTimeZone("America/New_York"));
 
         // 2025-01-22 09:20:00 UTC
-        Date utcDate = new Date(1737537600000L);
+        Date utcDate = new Date(TEST_EPOCH_MILLIS);
         TestBean bean = new TestBean();
         bean.setDate(utcDate);
 
@@ -75,7 +78,7 @@ class DateSerializerTest {
     @Test
     void testSerializeWithDefaultTimezone() throws Exception {
         // No timezone set in context, should default to Asia/Shanghai
-        Date utcDate = new Date(1737537600000L);
+        Date utcDate = new Date(TEST_EPOCH_MILLIS);
         TestBean bean = new TestBean();
         bean.setDate(utcDate);
 
@@ -89,7 +92,7 @@ class DateSerializerTest {
     void testSerializeUTC() throws Exception {
         TimeZoneContext.set(TimeZone.getTimeZone("UTC"));
 
-        Date utcDate = new Date(1737537600000L);
+        Date utcDate = new Date(TEST_EPOCH_MILLIS);
         TestBean bean = new TestBean();
         bean.setDate(utcDate);
 
@@ -103,7 +106,7 @@ class DateSerializerTest {
         TimeZoneContext.set(TimeZone.getTimeZone("Asia/Tokyo"));
 
         // 2025-01-22 09:20:00 UTC
-        Date utcDate = new Date(1737537600000L);
+        Date utcDate = new Date(TEST_EPOCH_MILLIS);
         TestBean bean = new TestBean();
         bean.setDate(utcDate);
 

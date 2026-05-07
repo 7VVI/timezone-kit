@@ -8,6 +8,7 @@ import com.tzkit.context.TimeZoneContext;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 /**
@@ -17,6 +18,7 @@ import java.util.TimeZone;
 public class DateSerializer extends JsonSerializer<Date> {
 
     private static final String DEFAULT_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    static final TimeZone DEFAULT_TIMEZONE = TimeZone.getTimeZone("Asia/Shanghai");
 
     @Override
     public void serialize(Date value, JsonGenerator gen,
@@ -29,10 +31,10 @@ public class DateSerializer extends JsonSerializer<Date> {
 
         TimeZone userTz = TimeZoneContext.get();
         if (userTz == null) {
-            userTz = TimeZone.getTimeZone("Asia/Shanghai");
+            userTz = DEFAULT_TIMEZONE;
         }
 
-        SimpleDateFormat sdf = new SimpleDateFormat(DEFAULT_PATTERN);
+        SimpleDateFormat sdf = new SimpleDateFormat(DEFAULT_PATTERN, Locale.ENGLISH);
         sdf.setTimeZone(userTz);
 
         gen.writeString(sdf.format(value));

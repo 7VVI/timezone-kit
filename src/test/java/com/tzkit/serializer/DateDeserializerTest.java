@@ -9,10 +9,14 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.TimeZone;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class DateDeserializerTest {
+
+    // 2025-01-22 09:20:00 UTC
+    private static final long TEST_EPOCH_MILLIS = 1737537600000L;
 
     private ObjectMapper mapper;
 
@@ -48,7 +52,7 @@ class DateDeserializerTest {
 
         assertNotNull(bean.getDate());
         // Verify the resulting Date represents 2025-01-22 09:20:00 UTC
-        assertEquals(1737537600000L, bean.getDate().getTime(),
+        assertEquals(TEST_EPOCH_MILLIS, bean.getDate().getTime(),
             "Expected epoch millis for 2025-01-22 09:20:00 UTC");
     }
 
@@ -61,7 +65,7 @@ class DateDeserializerTest {
         TestBean bean = mapper.readValue(json, TestBean.class);
 
         assertNotNull(bean.getDate());
-        assertEquals(1737537600000L, bean.getDate().getTime(),
+        assertEquals(TEST_EPOCH_MILLIS, bean.getDate().getTime(),
             "Expected epoch millis for 2025-01-22 09:20:00 UTC");
     }
 
@@ -73,7 +77,7 @@ class DateDeserializerTest {
 
         assertNotNull(bean.getDate());
         // 17:20:00 Shanghai (UTC+8) = 09:20:00 UTC
-        assertEquals(1737537600000L, bean.getDate().getTime(),
+        assertEquals(TEST_EPOCH_MILLIS, bean.getDate().getTime(),
             "Expected epoch millis for 2025-01-22 09:20:00 UTC using default Asia/Shanghai");
     }
 
@@ -86,7 +90,7 @@ class DateDeserializerTest {
         TestBean bean = mapper.readValue(json, TestBean.class);
 
         assertNotNull(bean.getDate());
-        assertEquals(1737537600000L, bean.getDate().getTime(),
+        assertEquals(TEST_EPOCH_MILLIS, bean.getDate().getTime(),
             "Expected epoch millis for 2025-01-22 09:20:00 UTC");
     }
 
@@ -99,7 +103,7 @@ class DateDeserializerTest {
         TestBean bean = mapper.readValue(json, TestBean.class);
 
         assertNotNull(bean.getDate());
-        assertEquals(1737537600000L, bean.getDate().getTime(),
+        assertEquals(TEST_EPOCH_MILLIS, bean.getDate().getTime(),
             "Expected epoch millis for 2025-01-22 09:20:00 UTC");
     }
 
@@ -108,7 +112,7 @@ class DateDeserializerTest {
         TimeZoneContext.set(TimeZone.getTimeZone("Asia/Shanghai"));
 
         // Serialize a date, then deserialize it back - should get the same epoch millis
-        Date original = new Date(1737537600000L);
+        Date original = new Date(TEST_EPOCH_MILLIS);
         TestBean writeBean = new TestBean();
         writeBean.setDate(original);
 
@@ -124,6 +128,17 @@ class DateDeserializerTest {
 
         assertEquals(original.getTime(), readBean.getDate().getTime(),
             "Round-trip serialization should preserve the same instant");
+    }
+
+    @Test
+    void testDeserializeMalformedDate() throws Exception {
+        TimeZoneContext.set(TimeZone.getTimeZone("Asia/Shanghai"));
+
+        String json = "{\"date\":\"not-a-valid-date\"}";
+        IOException exception = assertThrows(IOException.class,
+            () -> mapper.readValue(json, TestBean.class));
+        assertTrue(exception.getMessage().contains("Failed to parse date"),
+            "Expected IOException with parse failure message, got: " + exception.getMessage());
     }
 
     static class TestBean {
