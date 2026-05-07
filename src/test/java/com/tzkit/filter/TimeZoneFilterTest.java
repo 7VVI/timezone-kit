@@ -5,6 +5,7 @@ import com.tzkit.context.TimeZoneContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -155,6 +156,53 @@ class TimeZoneFilterTest {
 
         // Context should be cleared after filter chain completes
         assertNull(TimeZoneContext.get());
+    }
+
+    @Test
+    void testCleanupAfterException() throws Exception {
+        request.addHeader("Time-Zone", "Asia/Shanghai");
+        MockFilterChain throwingChain = new MockFilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res)
+                throws IOException, ServletException {
+                throw new ServletException("Test exception");
+            }
+        };
+
+        assertThrows(ServletException.class, () ->
+            filter.doFilter(request, response, throwingChain));
+
+        // Context should still be cleared after exception
+        assertNull(TimeZoneContext.get());
+    }
+
+    @Test
+    void testCleanupAfterErrorResponse() throws Exception {
+        request.addHeader("Time-Zone", "Asia/Shanghai");
+        MockFilterChain errorChain = new MockFilterChain() {
+            @Override
+            public void doFilter(ServletRequest req, ServletResponse res)
+                throws IOException, ServletException {
+                ((MockHttpServletResponse) res).setStatus(500);
+            }
+        };
+
+        filter.doFilter(request, response, errorChain);
+
+        // Context should be cleared even after error response
+        assertNull(TimeZoneContext.get());
+    }
+
+    @Test
+    void testMalformedOffsetFormat() throws Exception {
+        request.addHeader("Time-Zone-Offset", "abc");
+
+        filter.doFilter(request, response, filterChain);
+
+        // Malformed offset "abc" produces GMT (TimeZone.getTimeZone fallback for invalid offsets)
+        TimeZone tz = getCapturedTimezone();
+        assertNotNull(tz);
+        assertEquals("GMT", tz.getID());
     }
 
     private static class MockFilterChain implements FilterChain {
