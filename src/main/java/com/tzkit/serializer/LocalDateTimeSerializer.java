@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.ContextualSerializer;
+import com.tzkit.context.TimeZoneContextHolder;
 import com.tzkit.utils.DateUtils;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class LocalDateTimeSerializer extends JsonSerializer<LocalDateTime>
 
         DateTimeFormatter formatter =
             DateTimeFormatter.ofPattern(this.pattern, Locale.ENGLISH);
-        gen.writeString(formatter.format(DateUtils.convert(value, ZoneId.of("UTC"), zone)));
+        gen.writeString(formatter.format(DateUtils.convert(value, TimeZoneContextHolder.getServerZoneId(), zone)));
     }
 
     @Override

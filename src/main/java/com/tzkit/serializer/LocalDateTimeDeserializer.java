@@ -6,16 +6,16 @@ import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
+import com.tzkit.context.TimeZoneContextHolder;
 import com.tzkit.utils.DateUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 
 /**
  * java.time.LocalDateTime 自定义反序列化器
- * 在用户时区下解析日期字符串，并转换为 UTC LocalDateTime
+ * 在用户时区下解析日期字符串，并转换为服务器时区 LocalDateTime
  * 支持 @JsonFormat 注解的 pattern 和 timezone 覆盖
  * 使用 DateUtils 进行灵活的多格式解析
  */
@@ -60,9 +60,9 @@ public class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime>
             userTime = DateUtils.parseLdt(text);
         }
 
-        // 将用户时区 LocalDateTime 转换为 UTC
+        // 将用户时区 LocalDateTime 转换为服务器时区
         return userTime.atZone(zone)
-            .withZoneSameInstant(ZoneOffset.UTC)
+            .withZoneSameInstant(TimeZoneContextHolder.getServerZoneId())
             .toLocalDateTime();
     }
 

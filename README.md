@@ -117,7 +117,8 @@ LocalDate 仅日期，无时区转换：
 |------|--------|------|
 | `tzkit.header.timezone` | `Time-Zone` | 时区ID请求头名称 |
 | `tzkit.header.offset` | `Time-Zone-Offset` | UTC偏移量请求头名称 |
-| `tzkit.default-timezone` | `Asia/Shanghai` | 默认时区（无请求头时使用） |
+| `tzkit.default-timezone` | `Asia/Shanghai` | 默认用户时区（无请求头时使用） |
+| `tzkit.server-timezone` | `UTC` | 后端服务器时区（数据存储/处理的基准时区） |
 
 ### 配置示例
 
@@ -127,7 +128,8 @@ tzkit:
   header:
     timezone: X-Timezone      # 自定义时区头名称
     offset: X-Offset           # 自定义偏移量头名称
-  default-timezone: America/New_York  # 自定义默认时区
+  default-timezone: America/New_York  # 自定义默认用户时区
+  server-timezone: Asia/Shanghai       # 自定义服务器时区（默认UTC）
 ```
 
 ## @JsonFormat 注解支持
@@ -199,23 +201,26 @@ DateUtils.parseLdt("2026-01-22 18:00:00");  // LocalDateTime
 
 // ===== 时区获取 =====
 TimeZone tz = DateUtils.getTimeZone();      // 用户时区
-ZoneId zone = DateUtils.getZoneId();        // ZoneId
-ZoneOffset offset = DateUtils.getZoneOffset();  // 偏移量
+ZoneId zone = DateUtils.getZoneId();        // 用户ZoneId
+ZoneOffset offset = DateUtils.getZoneOffset();  // 用户时区偏移量
+TimeZone serverTz = DateUtils.getServerTimeZone();  // 服务器时区
+ZoneId serverZone = DateUtils.getServerZoneId();    // 服务器ZoneId
 
 // ===== 当前时间 =====
 LocalDateTime now = DateUtils.now();        // 用户时区当前时间
 LocalDate today = DateUtils.today();        // 用户时区当前日期
+LocalDateTime serverNow = DateUtils.nowServer(); // 服务器时区当前时间
 LocalDateTime utcNow = DateUtils.nowUtc();  // UTC当前时间
 Instant instant = DateUtils.nowInstant();   // 当前Instant
 
 // ===== 时区转换 =====
-LocalDateTime userTime = DateUtils.toUserZone(utcTime);  // UTC → 用户时区
-LocalDateTime utcTime = DateUtils.toUtc(userTime);       // 用户时区 → UTC
+LocalDateTime userTime = DateUtils.toUserZone(serverTime);  // 服务器时区 → 用户时区
+LocalDateTime serverTime = DateUtils.toServerZone(userTime); // 用户时区 → 服务器时区
 LocalDateTime converted = DateUtils.convert(time, fromZone, toZone);  // 任意转换
 
 // ===== 格式化 =====
-String str = DateUtils.format(utcTime);                     // 默认格式
-String str = DateUtils.format(utcTime, "yyyy/MM/dd HH:mm"); // 自定义格式
+String str = DateUtils.format(serverTime);                     // 默认格式
+String str = DateUtils.format(serverTime, "yyyy/MM/dd HH:mm"); // 自定义格式
 String str = DateUtils.format(date);                        // Date格式化
 ```
 
@@ -231,21 +236,22 @@ String str = DateUtils.format(date);                        // Date格式化
   ▼
 TimeZoneFilter (Servlet过滤器)
   │ 解析请求头 → 存储到 TimeZoneContext (ThreadLocal)
+  │ 初始化服务器时区 → TimeZoneContextHolder (配置的 server-timezone)
   │
   ▼
 Jackson反序列化 (请求体)
   │ Date/LocalDateTime反序列化器
-  │ 读取用户时区: "2026-01-22 18:00:00" → UTC Date/LocalDateTime
+  │ 读取用户时区: "2026-01-22 18:00:00" → 服务器时区 Date/LocalDateTime
   │
   ▼
 Controller / Service
-  │ 业务代码处理 UTC 时间
+  │ 业务代码处理服务器时区时间
   │ 可使用 DateUtils 工具类
   │
   ▼
 Jackson序列化 (响应体)
   │ Date/LocalDateTime序列化器
-  │ 读取用户时区: UTC → "2026-01-22 18:00:00"
+  │ 读取用户时区: 服务器时区 → "2026-01-22 18:00:00"
   │
   ▼
 TimeZoneFilter.afterCompletion()
@@ -280,7 +286,8 @@ src/main/java/com/tzkit/
 │   ├── JacksonTimeZoneConfig.java     # Jackson配置
 │   └── WebMvcConfig.java              # Web MVC配置
 ├── context/
-│   └── TimeZoneContext.java           # ThreadLocal时区持有者
+│   ├── TimeZoneContext.java           # ThreadLocal用户时区持有者
+│   └── TimeZoneContextHolder.java     # 服务器时区持有者（静态全局配置）
 ├── converter/
 │   ├── UserTimeZoneDateConverter.java      # Date参数转换器
 │   ├── UserTimeZoneLocalDateConverter.java # LocalDate参数转换器
@@ -349,6 +356,7 @@ String str = DateUtils.format(date);  // 用户时区字符串
   - @JsonFormat 支持
   - QueryParam 参数转换
   - DateUtils 工具类
+  - 可配置服务器时区（支持 tzkit.server-timezone 配置）
 
 ## 许可证
 
