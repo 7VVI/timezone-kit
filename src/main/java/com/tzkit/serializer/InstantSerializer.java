@@ -9,9 +9,9 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Custom serializer for java.time.Instant.
- * Outputs ISO-8601 UTC format with no timezone conversion
- * (Instant always represents a precise moment in UTC).
+ * java.time.Instant 自定义序列化器
+ * 输出 ISO-8601 UTC 格式，不进行时区转换
+ * （Instant 始终表示 UTC 中的精确时刻）
  */
 public class InstantSerializer extends JsonSerializer<Instant> {
 

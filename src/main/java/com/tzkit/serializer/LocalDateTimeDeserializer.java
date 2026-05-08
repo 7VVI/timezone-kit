@@ -14,10 +14,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 /**
- * Custom deserializer for java.time.LocalDateTime.
- * Parses date string in user timezone and converts to UTC LocalDateTime.
- * Supports @JsonFormat annotation for per-field pattern and timezone override.
- * Uses DateUtils for flexible multi-format parsing.
+ * java.time.LocalDateTime 自定义反序列化器
+ * 在用户时区下解析日期字符串，并转换为 UTC LocalDateTime
+ * 支持 @JsonFormat 注解的 pattern 和 timezone 覆盖
+ * 使用 DateUtils 进行灵活的多格式解析
  */
 public class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime>
     implements ContextualDeserializer {
@@ -52,15 +52,15 @@ public class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime>
 
         LocalDateTime userTime;
 
-        // If a pattern is specified (e.g. from @JsonFormat), use it
+        // 指定 pattern 时（例如来自 @JsonFormat），使用指定格式
         if (this.pattern != null && !this.pattern.isEmpty()) {
             userTime = DateUtils.parse(text, this.pattern);
         } else {
-            // Use DateUtils multi-format parsing
+            // 使用 DateUtils 多格式解析
             userTime = DateUtils.parseLdt(text);
         }
 
-        // Convert user timezone LocalDateTime to UTC
+        // 将用户时区 LocalDateTime 转换为 UTC
         return userTime.atZone(zone)
             .withZoneSameInstant(ZoneOffset.UTC)
             .toLocalDateTime();

@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.time.Instant;
 
 /**
- * Custom deserializer for java.time.Instant.
- * Supports two input formats:
- * 1. ISO-8601 string (e.g. "2026-01-22T10:00:00Z")
- * 2. Numeric timestamp (epoch milliseconds)
- * No timezone conversion is performed (Instant is always UTC).
+ * java.time.Instant 自定义反序列化器
+ * 支持两种输入格式:
+ * 1. ISO-8601 字符串（例如: "2026-01-22T10:00:00Z"）
+ * 2. 数字时间戳（epoch 毫秒）
+ * 不进行时区转换（Instant 始终为 UTC）
  */
 public class InstantDeserializer extends JsonDeserializer<Instant> {
 

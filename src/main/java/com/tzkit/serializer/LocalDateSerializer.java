@@ -9,8 +9,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Custom serializer for java.time.LocalDate.
- * Outputs ISO local date format. No timezone conversion (LocalDate is timezone-independent).
+ * java.time.LocalDate 自定义序列化器
+ * 输出 ISO 本地日期格式，不进行时区转换（LocalDate 与时区无关）
  */
 public class LocalDateSerializer extends JsonSerializer<LocalDate> {
 

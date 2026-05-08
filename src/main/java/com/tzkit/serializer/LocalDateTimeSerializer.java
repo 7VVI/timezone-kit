@@ -15,9 +15,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 /**
- * Custom serializer for java.time.LocalDateTime.
- * Converts UTC LocalDateTime to user timezone string representation.
- * Supports @JsonFormat annotation for per-field pattern and timezone override.
+ * java.time.LocalDateTime 自定义序列化器
+ * 将 UTC LocalDateTime 转换为用户时区的字符串表示
+ * 支持 @JsonFormat 注解的 pattern 和 timezone 覆盖
  */
 public class LocalDateTimeSerializer extends JsonSerializer<LocalDateTime>
     implements ContextualSerializer {

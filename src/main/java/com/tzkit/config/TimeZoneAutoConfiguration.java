@@ -14,8 +14,8 @@ import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 
 /**
- * Auto-configuration for TZKit Spring Boot Starter.
- * Activates on Servlet-based web applications.
+ * TZKit Spring Boot Starter 自动配置
+ * 在 Servlet 类型的 Web 应用中生效
  */
 @AutoConfiguration
 @ConditionalOnClass(Filter.class)
@@ -25,7 +25,7 @@ import jakarta.servlet.Filter;
 public class TimeZoneAutoConfiguration {
 
     /**
-     * Register TimeZoneFilter with highest priority.
+     * 注册 TimeZoneFilter，优先级最高
      */
     @Bean
     public FilterRegistrationBean<TimeZoneFilter> timeZoneFilterRegistration(

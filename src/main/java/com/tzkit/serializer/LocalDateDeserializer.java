@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 
 /**
- * Custom deserializer for java.time.LocalDate.
- * Parses ISO date string. No timezone conversion (LocalDate is timezone-independent).
+ * java.time.LocalDate 自定义反序列化器
+ * 解析 ISO 日期字符串，不进行时区转换（LocalDate 与时区无关）
  */
 public class LocalDateDeserializer extends JsonDeserializer<LocalDate> {
 

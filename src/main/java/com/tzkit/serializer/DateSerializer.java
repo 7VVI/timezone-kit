@@ -13,9 +13,9 @@ import java.util.Date;
 import java.util.TimeZone;
 
 /**
- * Custom serializer for java.util.Date.
- * Supports @JsonFormat annotation for per-field pattern and timezone overrides.
- * Falls back to TimeZoneContext for timezone resolution via DateUtils.
+ * java.util.Date 自定义序列化器
+ * 支持 @JsonFormat 注解的 pattern 和 timezone 覆盖
+ * 未指定 timezone 时通过 DateUtils 从 TimeZoneContext 获取用户时区
  */
 public class DateSerializer extends JsonSerializer<Date> implements ContextualSerializer {
 
@@ -43,13 +43,13 @@ public class DateSerializer extends JsonSerializer<Date> implements ContextualSe
         }
 
         String result;
-        // If @JsonFormat specifies a custom timezone
+        // @JsonFormat 指定了自定义时区
         if (this.timezone != null) {
             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(this.pattern, java.util.Locale.ENGLISH);
             sdf.setTimeZone(this.timezone);
             result = sdf.format(value);
         } else {
-            // Use DateUtils with user timezone from context
+            // 使用 DateUtils 和上下文中的用户时区
             result = DateUtils.format(value, this.pattern);
         }
 

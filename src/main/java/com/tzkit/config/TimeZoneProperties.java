@@ -3,19 +3,19 @@ package com.tzkit.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration properties for TZKit.
- * Prefix: tzkit
+ * TZKit 配置属性
+ * 配置前缀: tzkit
  */
 @ConfigurationProperties(prefix = "tzkit")
 public class TimeZoneProperties {
 
     /**
-     * Header configuration
+     * 请求头配置
      */
     private Header header = new Header();
 
     /**
-     * Default timezone when no header provided
+     * 默认时区（未提供请求头时使用）
      */
     private String defaultTimezone = "Asia/Shanghai";
 
@@ -36,16 +36,16 @@ public class TimeZoneProperties {
     }
 
     /**
-     * Header name configuration
+     * 请求头名称配置
      */
     public static class Header {
         /**
-         * Request header name for timezone ID (IANA)
+         * 时区 ID (IANA) 请求头名称
          */
         private String timezone = "Time-Zone";
 
         /**
-         * Request header name for UTC offset
+         * UTC 偏移量请求头名称
          */
         private String offset = "Time-Zone-Offset";
 

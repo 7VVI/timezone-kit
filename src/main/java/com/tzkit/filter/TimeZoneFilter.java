@@ -11,8 +11,8 @@ import java.io.IOException;
 import java.util.TimeZone;
 
 /**
- * Servlet filter that extracts timezone from request headers
- * and stores it in TimeZoneContext for the request lifecycle.
+ * Servlet 过滤器，从请求头中提取时区信息
+ * 并将其存储在 TimeZoneContext 中，供请求生命周期使用
  */
 public class TimeZoneFilter implements Filter {
 
@@ -36,20 +36,20 @@ public class TimeZoneFilter implements Filter {
 
             chain.doFilter(request, response);
         } finally {
-            // Always clear to prevent memory leaks
+            // 始终清理，防止内存泄漏
             TimeZoneContext.clear();
         }
     }
 
     /**
-     * Resolve timezone from request headers.
-     * Priority: Time-Zone header -> Time-Zone-Offset header -> default
+     * 从请求头中解析时区
+     * 优先级: Time-Zone 请求头 -> Time-Zone-Offset 请求头 -> 默认时区
      */
     private TimeZone resolveTimeZone(HttpServletRequest request) {
         String timezoneHeader = request.getHeader(properties.getHeader().getTimezone());
         String offsetHeader = request.getHeader(properties.getHeader().getOffset());
 
-        // Priority 1: IANA timezone ID
+        // 优先级1: IANA 时区 ID
         if (timezoneHeader != null && !timezoneHeader.isEmpty()) {
             TimeZone tz = parseIANATimezone(timezoneHeader);
             if (tz != null) {
@@ -58,7 +58,7 @@ public class TimeZoneFilter implements Filter {
             log.warn("Invalid timezone header: {}, using default", timezoneHeader);
         }
 
-        // Priority 2: UTC offset
+        // 优先级2: UTC 偏移量
         if (offsetHeader != null && !offsetHeader.isEmpty()) {
             TimeZone tz = parseOffsetTimezone(offsetHeader);
             if (tz != null) {
@@ -67,17 +67,17 @@ public class TimeZoneFilter implements Filter {
             log.warn("Invalid offset header: {}, using default", offsetHeader);
         }
 
-        // Priority 3: Default timezone
+        // 优先级3: 默认时区
         return TimeZone.getTimeZone(properties.getDefaultTimezone());
     }
 
     /**
-     * Parse IANA timezone ID (e.g., "Asia/Shanghai")
+     * 解析 IANA 时区 ID（例如: "Asia/Shanghai"）
      */
     private TimeZone parseIANATimezone(String timezoneId) {
         try {
             TimeZone tz = TimeZone.getTimeZone(timezoneId);
-            // TimeZone.getTimeZone returns GMT for invalid IDs
+            // TimeZone.getTimeZone 对于无效的 ID 会返回 GMT
             if (!tz.getID().equals("GMT") || timezoneId.equals("GMT")) {
                 return tz;
             }
@@ -88,14 +88,14 @@ public class TimeZoneFilter implements Filter {
     }
 
     /**
-     * Parse UTC offset (e.g., "+8", "-5", "+5:30")
+     * 解析 UTC 偏移量（例如: "+8", "-5", "+5:30"）
      */
     private TimeZone parseOffsetTimezone(String offset) {
         try {
             String normalized = normalizeOffset(offset);
             if (normalized != null) {
                 TimeZone tz = TimeZone.getTimeZone("GMT" + normalized);
-                // TimeZone.getTimeZone returns GMT for invalid offsets like "+99:99"
+                // TimeZone.getTimeZone 对于无效偏移量（如 "+99:99"）会返回 GMT
                 if (!tz.getID().equals("GMT") || ("GMT" + normalized).equals("GMT")) {
                     return tz;
                 }
@@ -108,26 +108,26 @@ public class TimeZoneFilter implements Filter {
     }
 
     /**
-     * Normalize offset format to +/-HH:mm or +/-HH
-     * Input: "+8", "-5", "+5:30", "+05:30"
-     * Output: "+08:00", "-05:00", "+05:30", "+05:30"
+     * 规范化偏移量格式为 +/-HH:mm 或 +/-HH
+     * 输入: "+8", "-5", "+5:30", "+05:30"
+     * 输出: "+08:00", "-05:00", "+05:30", "+05:30"
      */
     private String normalizeOffset(String offset) {
         if (offset == null || offset.isEmpty()) {
             return null;
         }
 
-        // Remove leading + if present, keep -
+        // 移除前导 +，保留 -
         String sign = offset.startsWith("-") ? "-" : "+";
         String value = offset.startsWith("+") || offset.startsWith("-")
             ? offset.substring(1) : offset;
 
-        // Validate: must contain only digits and optional colon
+        // 校验: 只能包含数字和可选的冒号
         if (!value.matches("[0-9:]+")) {
-            return null; // Invalid format, will fall back to default timezone
+            return null; // 无效格式，回退到默认时区
         }
 
-        // Split by : if present
+        // 按冒号分割（如果存在）
         String[] parts = value.split(":");
 
         String hours;

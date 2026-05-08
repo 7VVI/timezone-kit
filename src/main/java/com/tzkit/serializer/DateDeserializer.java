@@ -8,17 +8,18 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.tzkit.utils.DateUtils;
 
+import cn.hutool.core.date.format.FastDateFormat;
+
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
 /**
- * Custom deserializer for java.util.Date.
- * Supports @JsonFormat annotation for per-field pattern and timezone overrides.
- * Falls back to DateUtils for timezone resolution and multi-format auto-parsing.
+ * java.util.Date 自定义反序列化器
+ * 支持 @JsonFormat 注解的 pattern 和 timezone 覆盖
+ * 未指定 pattern 时使用 DateUtils 进行多格式自动解析
  */
 public class DateDeserializer extends JsonDeserializer<Date> implements ContextualDeserializer {
 
@@ -50,18 +51,17 @@ public class DateDeserializer extends JsonDeserializer<Date> implements Contextu
             tz = DateUtils.getTimeZone();
         }
 
-        // If @JsonFormat specifies a pattern, use it for parsing
+        // 指定 pattern 时使用指定格式
         if (this.pattern != null && !this.pattern.isEmpty()) {
             try {
-                SimpleDateFormat sdf = new SimpleDateFormat(this.pattern, Locale.ENGLISH);
-                sdf.setTimeZone(tz);
+                FastDateFormat sdf = FastDateFormat.getInstance(this.pattern, tz, Locale.ENGLISH);
                 return sdf.parse(text);
             } catch (ParseException e) {
-                throw new IOException("Failed to parse date with pattern [" + this.pattern + "]: " + text, e);
+                throw new IOException("无法解析日期字符串: " + text + "，格式: " + this.pattern, e);
             }
         }
 
-        // Use DateUtils for multi-format auto-parsing
+        // 使用 DateUtils 多格式自动解析
         try {
             return DateUtils.parse(text, tz);
         } catch (Exception e) {
