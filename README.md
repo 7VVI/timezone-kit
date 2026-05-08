@@ -19,7 +19,7 @@
 <dependency>
     <groupId>com.tzkit</groupId>
     <artifactId>tzkit-spring-boot-starter</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-jdk11</version>
 </dependency>
 ```
 
