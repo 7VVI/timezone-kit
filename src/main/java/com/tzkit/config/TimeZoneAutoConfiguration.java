@@ -1,5 +1,6 @@
 package com.tzkit.config;
 
+import com.tzkit.context.TimeZoneContextHolder;
 import com.tzkit.filter.TimeZoneFilter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -12,6 +13,7 @@ import org.springframework.core.Ordered;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
+import java.util.TimeZone;
 
 /**
  * TZKit Spring Boot Starter 自动配置
@@ -31,6 +33,9 @@ public class TimeZoneAutoConfiguration {
     public FilterRegistrationBean<TimeZoneFilter> timeZoneFilterRegistration(
             TimeZoneProperties properties) {
 
+        // 初始化服务器时区配置
+        initServerTimeZone(properties);
+
         TimeZoneFilter filter = new TimeZoneFilter(properties);
 
         FilterRegistrationBean<TimeZoneFilter> registration =
@@ -45,5 +50,17 @@ public class TimeZoneAutoConfiguration {
         );
 
         return registration;
+    }
+
+    /**
+     * 初始化服务器时区配置
+     * 后端服务使用此时区作为数据存储/处理的基准时区
+     */
+    private void initServerTimeZone(TimeZoneProperties properties) {
+        String serverTimezone = properties.getServerTimezone();
+        if (serverTimezone != null && !serverTimezone.isEmpty()) {
+            TimeZone tz = TimeZone.getTimeZone(serverTimezone);
+            TimeZoneContextHolder.setServerTimeZone(tz);
+        }
     }
 }

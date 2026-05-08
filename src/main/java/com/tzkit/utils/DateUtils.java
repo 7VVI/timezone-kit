@@ -11,6 +11,7 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.tzkit.context.TimeZoneContext;
+import com.tzkit.context.TimeZoneContextHolder;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -73,6 +74,20 @@ public final class DateUtils {
     }
 
     /**
+     * 获取服务器时区（后端数据存储/处理的基准时区）
+     */
+    public static TimeZone getServerTimeZone() {
+        return TimeZoneContextHolder.getServerTimeZone();
+    }
+
+    /**
+     * 获取服务器ZoneId（后端数据存储/处理的基准ZoneId）
+     */
+    public static ZoneId getServerZoneId() {
+        return TimeZoneContextHolder.getServerZoneId();
+    }
+
+    /**
      * 获取UTC时区
      */
     public static TimeZone getUtcTimeZone() {
@@ -93,6 +108,13 @@ public final class DateUtils {
      */
     public static LocalDate today() {
         return LocalDate.now(getZoneId());
+    }
+
+    /**
+     * 获取服务器当前LocalDateTime（使用服务器配置的时区）
+     */
+    public static LocalDateTime nowServer() {
+        return LocalDateTime.now(getServerZoneId());
     }
 
     /**
@@ -253,9 +275,35 @@ public final class DateUtils {
     // ===== 时区转换 =====
 
     /**
-     * 将UTC LocalDateTime转换为用户时区
+     * 将服务器时区 LocalDateTime 转换为用户时区
      */
-    public static LocalDateTime toUserZone(LocalDateTime utcTime) {
+    public static LocalDateTime toUserZone(LocalDateTime serverTime) {
+        if (serverTime == null) {
+            throw new IllegalArgumentException("serverTime must not be null");
+        }
+        return serverTime.atZone(getServerZoneId())
+            .withZoneSameInstant(getZoneId())
+            .toLocalDateTime();
+    }
+
+    /**
+     * 将用户时区 LocalDateTime 转换为服务器时区
+     */
+    public static LocalDateTime toServerZone(LocalDateTime userTime) {
+        if (userTime == null) {
+            throw new IllegalArgumentException("userTime must not be null");
+        }
+        return userTime.atZone(getZoneId())
+            .withZoneSameInstant(getServerZoneId())
+            .toLocalDateTime();
+    }
+
+    /**
+     * 将UTC LocalDateTime转换为用户时区
+     * @deprecated 使用 {@link #toUserZone(LocalDateTime)} 代替，支持可配置的服务器时区
+     */
+    @Deprecated
+    public static LocalDateTime toUserZoneUtc(LocalDateTime utcTime) {
         if (utcTime == null) {
             throw new IllegalArgumentException("utcTime must not be null");
         }
@@ -266,7 +314,9 @@ public final class DateUtils {
 
     /**
      * 将用户时区LocalDateTime转换为UTC
+     * @deprecated 使用 {@link #toServerZone(LocalDateTime)} 代替，支持可配置的服务器时区
      */
+    @Deprecated
     public static LocalDateTime toUtc(LocalDateTime userTime) {
         if (userTime == null) {
             throw new IllegalArgumentException("userTime must not be null");

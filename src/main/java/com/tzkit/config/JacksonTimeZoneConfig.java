@@ -3,6 +3,7 @@ package com.tzkit.config;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.tzkit.context.TimeZoneContextHolder;
 import com.tzkit.serializer.*;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +13,7 @@ import java.util.TimeZone;
 
 /**
  * Jackson 时区序列化配置
- * 注册自定义序列化器/反序列化器，设置 UTC 为默认时区
+ * 注册自定义序列化器/反序列化器，设置服务器时区为默认时区
  */
 @Configuration
 public class JacksonTimeZoneConfig {
@@ -20,8 +21,8 @@ public class JacksonTimeZoneConfig {
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer tzkitJacksonCustomizer() {
         return builder -> {
-            // 设置默认时区为 UTC
-            builder.timeZone(TimeZone.getTimeZone("UTC"));
+            // 设置默认时区为服务器时区（从配置中获取）
+            builder.timeZone(TimeZoneContextHolder.getServerTimeZone());
 
             // 禁用将日期写为时间戳格式
             builder.featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);

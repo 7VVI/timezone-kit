@@ -19,6 +19,12 @@ public class TimeZoneProperties {
      */
     private String defaultTimezone = "Asia/Shanghai";
 
+    /**
+     * 后端服务时区（数据存储/处理的基准时区）
+     * 默认为 UTC
+     */
+    private String serverTimezone = "UTC";
+
     public Header getHeader() {
         return header;
     }
@@ -33,6 +39,14 @@ public class TimeZoneProperties {
 
     public void setDefaultTimezone(String defaultTimezone) {
         this.defaultTimezone = defaultTimezone;
+    }
+
+    public String getServerTimezone() {
+        return serverTimezone;
+    }
+
+    public void setServerTimezone(String serverTimezone) {
+        this.serverTimezone = serverTimezone;
     }
 
     /**
