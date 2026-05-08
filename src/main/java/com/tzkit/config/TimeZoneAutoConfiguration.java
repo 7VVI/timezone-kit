@@ -1,7 +1,7 @@
 package com.tzkit.config;
 
 import com.tzkit.filter.TimeZoneFilter;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -10,14 +10,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
 
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.Filter;
+import javax.servlet.DispatcherType;
+import javax.servlet.Filter;
 
 /**
  * TZKit Spring Boot Starter 自动配置
  * 在 Servlet 类型的 Web 应用中生效
  */
-@AutoConfiguration
+@Configuration
 @ConditionalOnClass(Filter.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @EnableConfigurationProperties(TimeZoneProperties.class)

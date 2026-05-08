@@ -71,7 +71,7 @@ class TzKitIntegrationTest {
     void autoConfigurationClassShouldExist() {
         assertThat(TimeZoneAutoConfiguration.class).isNotNull();
         assertThat(TimeZoneAutoConfiguration.class.isAnnotationPresent(
-            org.springframework.boot.autoconfigure.AutoConfiguration.class)).isTrue();
+            org.springframework.context.annotation.Configuration.class)).isTrue();
     }
 
     @Test

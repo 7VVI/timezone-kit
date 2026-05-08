@@ -263,8 +263,8 @@ TimeZoneFilter.afterCompletion()
 
 ## 技术要求
 
-- Java 17+
-- Spring Boot 3.x
+- Java 11+
+- Spring Boot 2.7.x
 - Jackson (spring-boot-starter-json)
 - Hutool 5.8.x
 

@@ -2,8 +2,8 @@ package com.tzkit.filter;
 
 import com.tzkit.config.TimeZoneProperties;
 import com.tzkit.context.TimeZoneContext;
-import jakarta.servlet.*;
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
